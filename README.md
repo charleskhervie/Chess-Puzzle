@@ -1,0 +1,2 @@
+A lightweight web-based trainer that helps you practice mate-in-one chess puzzles.
+It loads random FEN positions, lets you drag pieces, tracks your score, and ends the session when time or strikes run out.
