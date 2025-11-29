@@ -14,6 +14,7 @@
     <div id="myBoard" style="width: 50%; max-width: 400px;"></div>
     <p id="solution"></p>
     <p id="hintText" class="text-yellow-300 text-xl"></p>
+    <p id="feedbackText" class="text-3xl font-bold transition-opacity duration-300" style="min-height: 2.5rem;"></p>
     <p id="cr">Correct: 0</p>
     <p id="strikes">Strikes: 0</p>
     <p id="timeLeft"></p>
@@ -48,11 +49,10 @@
     const solution = $("#solution");
     const correctText = $("#cr");
     const strikText = $("#strikes");
-    const psol = $("#prevsol");
     const timeLeftText = $("#timeLeft");
+    const feedbackText = $("#feedbackText");
 
     var correct = 0;
-    var incorrect = 0;
     var config = {
         draggable: true,
         pieceTheme: 'img/{piece}.png',
@@ -61,7 +61,6 @@
         onSnapEnd: onSnapEnd
     };
 
-    var correctMove = "";
     board = Chessboard('myBoard', config);
     $(window).resize(board.resize)
 
@@ -78,27 +77,6 @@
         e.preventDefault();
     });
 
-    function startPuzzle() {
-        newPuzzle();
-        startTimer();
-    }
-
-    function startTimer() {
-        timeLeft = timeLimit;
-        updateTimerDisplay();
-
-        timer = setInterval(function () {
-            timeLeft--;
-            updateTimerDisplay();
-
-            if (timeLeft <= 0 || strikes >= maxStrikes) {
-                clearInterval(timer);
-                // Show game over modal when time runs out or strikes reached
-                endGame('Time is up!');
-            }
-        }, 1000);
-    }
-
     function updateTimerDisplay() {
         var minutes = Math.floor(timeLeft / 60);
         var seconds = timeLeft % 60;
@@ -108,20 +86,15 @@
 
     function disableBoardInteractions() {
         config.draggable = false;
-        board = Chessboard('myBoard', config);
-
     }
 
     function newPuzzle() {
-        psol.hide();
         $.getJSON('puzzles.json', function(data) {
             var index = Math.floor(Math.random() * 301);
             var problem = data['problems'][index];
 
             board.position(problem['fen']);
             game.load(problem['fen']);
-            console.log(game.fen());
-            console.log(board.position());
             title.text("#" + problem['problemid'] + ": " + problem['type']);
             solution.text(problem['moves']);
             // reset hint state for each new puzzle
@@ -155,42 +128,30 @@
         var solutionMoves = solution.text().split(' ');
 
         if (!solutionMoves.includes(moveAN)) {  
-            incorrect++;
+            showFeedback('✗ Wrong!', 'text-red-500');
             strikes++;
             strikText.text(`Strikes: ${strikes}`);
             // if reached max strikes, end game, else load a new puzzle
             if (strikes >= maxStrikes) {
-                endGame('Maximum strikes reached');
+                setTimeout(() => endGame('Maximum strikes reached'), 800);
             } else {
-                newPuzzle();
+                setTimeout(() => newPuzzle(), 800);
             }
         } else {
+            showFeedback('✓ Correct!', 'text-green-500');
             correct++;
             correctText.text(`Correct: ${correct}`);
-            newPuzzle();
+            setTimeout(() => newPuzzle(), 800);
         }
-
-        updateStatus();
     }
 
     function onSnapEnd() {
         board.position(game.fen());
     }
 
-    function updateStatus() {
-        var status = '';
-
-        var moveColor = 'White';
-        if (game.turn() === 'b') {
-            moveColor = 'Black';
-        }
-    }
-
-    
     function startPuzzle() {
         document.getElementById("startButton").style.display = "none"; 
         correct = 0;
-        incorrect = 0;
         strikes = 0;
         timeLeft = timeLimit;
         startTimer();
@@ -198,9 +159,33 @@
         newPuzzle();
     }
 
+    function startTimer() {
+        timeLeft = timeLimit;
+        updateTimerDisplay();
+
+        timer = setInterval(function () {
+            timeLeft--;
+            updateTimerDisplay();
+
+            if (timeLeft <= 0 || strikes >= maxStrikes) {
+                clearInterval(timer);
+                endGame('Time is up!');
+            }
+        }, 1000);
+    }
+
     function enableBoardInteractions() {
         config.draggable = true;
-        board = Chessboard('myBoard', config);
+    }
+
+    function showFeedback(message, colorClass) {
+        feedbackText.text(message);
+        feedbackText.removeClass('text-red-500 text-green-500').addClass(colorClass);
+        feedbackText.css('opacity', '1');
+        
+        setTimeout(() => {
+            feedbackText.css('opacity', '0');
+        }, 600);
     }
 
     // Clear any square highlights added by hints
@@ -255,7 +240,6 @@
         // hide hint button
         $('#hintButton').hide();
         // populate modal stats
-        var msg = message ? message + '\n' : '';
         $('#modalStats').html('<strong>' + (message || 'Game over') + '</strong><br/>Correct: ' + correct + '<br/>Strikes: ' + strikes);
         $('#gameOverModal').show();
     }
@@ -268,7 +252,6 @@
         // Reset counters and UI, then immediately start a new game
         clearInterval(timer);
         correct = 0;
-        incorrect = 0;
         strikes = 0;
         correctText.text(`Correct: ${correct}`);
         strikText.text(`Strikes: ${strikes}`);
@@ -279,8 +262,6 @@
         $('#hintButton').hide();
         solution.hide();
         clearHighlights();
-        // reset visual board
-        board.start();
         // reset hint state
         hintClicks = 0;
         // start a fresh game immediately
