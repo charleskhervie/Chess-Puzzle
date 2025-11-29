@@ -52,11 +52,11 @@
                 <div class="grid grid-cols-2 gap-4 text-center">
                     <div class="bg-slate-900/40 rounded-lg py-4">
                         <p class="text-[11px] uppercase tracking-wider text-slate-400">Correct</p>
-                        <p id="cr" class="text-lg font-semibold text-emerald-400">0</p>
+                            <p id="cr" class="text-xl font-semibold text-emerald-400">Correct: 0</p>
                     </div>
                     <div class="bg-slate-900/40 rounded-lg py-4">
                         <p class="text-[11px] uppercase tracking-wider text-slate-400">Strikes</p>
-                        <p id="strikes" class="text-lg font-semibold text-rose-400">0</p>
+                        <p id="strikes" class="text-xl font-semibold text-rose-400">Strikes: 0</p>
                     </div>
                 </div>
                 <div class="mt-5">
@@ -183,7 +183,7 @@
         if (!solutionMoves.includes(moveAN)) {  
             showFeedback('✗ Wrong!', 'text-red-500');
             strikes++;
-            strikText.text(strikes);
+            strikText.text(`Strikes: ${strikes}`);
             // if reached max strikes, end game, else load a new puzzle
             if (strikes >= maxStrikes) {
                 setTimeout(() => endGame('Maximum strikes reached'), 800);
@@ -193,7 +193,7 @@
         } else {
             showFeedback('✓ Correct!', 'text-green-500');
             correct++;
-            correctText.text(correct);
+            correctText.text(`Correct: ${correct}`);
             setTimeout(() => newPuzzle(), 800);
         }
     }
@@ -208,8 +208,8 @@
         correct = 0;
         strikes = 0;
         timeLeft = timeLimit;
-        correctText.text(correct);
-        strikText.text(strikes);
+        correctText.text(`Correct: ${correct}`);
+        strikText.text(`Strikes: ${strikes}`);
         startTimer();
         enableBoardInteractions(); 
         newPuzzle();
@@ -240,8 +240,8 @@
         board = Chessboard('myBoard', { ...config, position: 'start' });
         correct = 0;
         strikes = 0;
-        correctText.text(correct);
-        strikText.text(strikes);
+        correctText.text(`Correct: ${correct}`);
+        strikText.text(`Strikes: ${strikes}`);
         $('#boardOverlay').show();
         $('#startButton').show();
         $('#hintButton').hide();
